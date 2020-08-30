@@ -5,7 +5,7 @@
 * **Tensorflow 1.2.0**
 * Python 2.7
 * CUDA 8.0+ (For GPU)
-* Python Libraries: numpy, scipy, matplotlib
+* Python Libraries: numpy, scipy, matplotlib， opencv-python
 
 ## Quick Start
 ### Training
@@ -18,3 +18,6 @@ To see HELP for the training script:
 
 ### Evaluation
     python eval.py --model pilotnet_io_lstm --batch_size 16 --gpu 1 --model_path logs_pilot/pilotnet_io_lstm/model_best.ckpt --result_dir result --loss_function mae
+
+### Prediction
+    python predict.py
