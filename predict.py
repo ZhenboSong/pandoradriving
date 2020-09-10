@@ -61,10 +61,16 @@ def log_string(out_str):
 
 def predict():
     with tf.device('/gpu:'+str(GPU_INDEX)):
-        if 'pn' in MODEL_FILE:
+        if '_pn' in MODEL_FILE:
             data_input = provider.Provider()
             imgs_pl, pts_pl, labels_pl = MODEL.placeholder_inputs(BATCH_SIZE)
             imgs_pl = [imgs_pl, pts_pl]
+        elif '_io' in MODEL_FILE:
+            data_input = provider.Provider()
+            if ADD_ORI:
+                imgs_pl, labels_pl = MODEL.placeholder_inputs_img5(BATCH_SIZE)
+            else:
+                imgs_pl, labels_pl = MODEL.placeholder_inputs(BATCH_SIZE)
         else:
             raise NotImplementedError
 
@@ -74,7 +80,14 @@ def predict():
         # Get model and loss
         pred = MODEL.get_model(imgs_pl, is_training_pl)
 
-        loss = MODEL.get_loss(pred, labels_pl)
+        if LOSS_FUNC == "mae":
+            loss = MODEL.get_loss_mae(pred, labels_pl)
+        elif LOSS_FUNC == "mse":
+            loss = MODEL.get_loss_mse(pred, labels_pl)
+        elif LOSS_FUNC == "stlossmse":
+            loss = MODEL.get_loss_stlossmse(pred, labels_pl)
+        elif LOSS_FUNC == "stloss2":
+            loss = MODEL.get_loss_stloss2(pred, labels_pl)
 
         # Add ops to save and restore all the variables.
         saver = tf.train.Saver()
@@ -106,7 +119,7 @@ def pred_one_epoch(sess, ops, data_input):
 
     for batch_idx in range(num_batches):
         if "io" in MODEL_FILE:
-            imgs = data_input.load_one_batch(BATCH_SIZE, "test")
+            imgs = data_input.load_one_batch(BATCH_SIZE, "test", reader_type="io", add_ori=ADD_ORI)
             feed_dict = {ops['imgs_pl']: imgs,
                          ops['is_training_pl']: is_training}
         else:
@@ -127,14 +140,14 @@ def pred_one_epoch(sess, ops, data_input):
 
     np.savetxt(os.path.join(RESULT_DIR, "behavior_pred.txt"), preds)
 
-    output_dir = os.path.join(RESULT_DIR, "results")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    i_list = get_dicts(description="test")
-    counter = 0
-    for i, num in enumerate(i_list):
-        np.savetxt(os.path.join(output_dir, str(i) + ".txt"), preds[counter:counter+num,:])
-        counter += num
+    # output_dir = os.path.join(RESULT_DIR, "results")
+    # if not os.path.exists(output_dir):
+        # os.makedirs(output_dir)
+    # i_list = get_dicts(description="test")
+    # counter = 0
+    # for i, num in enumerate(i_list):
+        # np.savetxt(os.path.join(output_dir, str(i) + ".txt"), preds[counter:counter+num,:])
+        # counter += num
     # plot_acc(preds, labels)
 
 def get_dicts(description="val"):
