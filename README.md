@@ -1,5 +1,9 @@
 # pandoradriving
 
+## Technical report
+[Incorporating Orientations into End-to-end Driving Model for Steering Control](https://arxiv.org/abs/2103.05846)
+
+
 ## Requirements
 
 * **Tensorflow 1.2.0**
